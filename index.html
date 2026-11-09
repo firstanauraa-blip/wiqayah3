@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wiqayah Patroli Linimasa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* layout: satu kolom selebar HP; HUD perisai di atas, linimasa sebagai arena */
+  --paper:#eef2ec; --surface:#ffffff; --ink:#12302a; --muted:#56675f; --line:#d5ded6;
+  --leaf:#1d7558; --leaf-soft:#dcefe5; --accent:#d9971c; --accent-soft:#fbefd4;
+  --danger:#b8432a; --danger-soft:#f8e1da;
+  --display:"Unbounded",system-ui,sans-serif; --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --arab:"Amiri","Traditional Arabic",serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0d1714; --surface:#15231e; --ink:#e6eee9; --muted:#9db0a7; --line:#28392f;
+  --leaf:#4cc093; --leaf-soft:#173a2d; --accent:#f0b73e; --accent-soft:#3a2e12;
+  --danger:#e47a5f; --danger-soft:#3d1f17; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#0d1714; --surface:#15231e; --ink:#e6eee9; --muted:#9db0a7; --line:#28392f;
+  --leaf:#4cc093; --leaf-soft:#173a2d; --accent:#f0b73e; --accent-soft:#3a2e12;
+  --danger:#e47a5f; --danger-soft:#3d1f17; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:540px;margin:0 auto;padding:12px 16px 48px}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:30px}h2{font-size:20px}h3{font-size:16px}
+p{margin:0}
+.muted{color:var(--muted)}.small{font-size:13px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.btn{font:600 15px var(--body);border-radius:12px;padding:13px 18px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer;width:100%}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:focus-visible,.opt:focus-visible,.tk:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.opt{display:block;width:100%;text-align:left;font:500 15px var(--body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:13px 14px;cursor:pointer;line-height:1.45}
+.opt:hover{border-color:var(--leaf)}
+.opt.good,.tk.good{border-color:var(--leaf);background:var(--leaf-soft)}
+.opt.bad,.tk.bad{border-color:var(--danger);background:var(--danger-soft)}
+.opt[disabled],.tk[disabled]{cursor:default}
+.tag{display:inline-block;font:600 12px var(--body);letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:var(--leaf-soft);color:var(--leaf)}
+.tag.gold{background:var(--accent-soft);color:var(--accent)}
+.tag.red{background:var(--danger-soft);color:var(--danger)}
+.arab{font-family:var(--arab);font-size:54px;line-height:1;color:var(--leaf)}
+.wordmark{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.18em;color:var(--muted)}
+.hud{position:sticky;top:0;z-index:5;background:var(--paper);padding:8px 0 10px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.hud .lbl{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--leaf);transition:width .4s ease}
+.bar.low i{background:var(--danger)}
+.score{font:700 20px var(--display);font-variant-numeric:tabular-nums;text-align:right}
+.combo{grid-column:1/-1;font-size:12px;color:var(--accent);font-weight:700;min-height:16px}
+.timer{height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.timer i{display:block;height:100%;background:var(--accent);width:100%}
+.post{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.post-head{display:flex;gap:10px;align-items:center;padding:12px 14px}
+.ava{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--display);flex:none;color:#fff}
+.post-body{padding:0 14px 14px}
+.post-media{margin:0 14px 12px;border-radius:12px;padding:16px;font-weight:600;font-size:14px;line-height:1.4}
+.post-meta{display:flex;gap:16px;padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tk{font:600 14px var(--body);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 6px;cursor:pointer;line-height:1.2}
+.tk b{display:block;font:700 18px var(--display)}
+.tk small{font-size:11px;color:var(--muted)}
+.tk.safe{border-style:dashed}
+.reveal{border-left:4px solid var(--leaf);background:var(--surface);border-radius:0 14px 14px 0;padding:14px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.reveal.bad{border-left-color:var(--danger)}
+.dalil{margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--leaf-soft);font-size:14px}
+.dalil b{color:var(--leaf)}
+.bubble{background:var(--leaf-soft);border-radius:4px 16px 16px 16px;padding:12px 14px}
+.bubble .from{font-size:12px;color:var(--leaf);font-weight:700;margin-bottom:4px}
+.vax{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.vax b.l{font:700 22px var(--display);color:var(--accent);text-align:center;background:var(--accent-soft);border-radius:10px;padding:6px 0}
+.big{font:700 44px var(--display);font-variant-numeric:tabular-nums;line-height:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.footer{margin-top:24px;font-size:12px;color:var(--muted);line-height:1.5}
+.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.rise{animation:rise .35s ease}
+@keyframes rise{from{transform:translateY(8px)}to{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.shake,.rise{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app" aria-live="polite"></main>
+<script>
+const TECH={S:"Simbol & estetika",E:"Eufemisme",B:"Baper",A:"Arus mayoritas",R:"Rangkap palsu",OK:"Aman"};
+const DALIL={
+ S:"<b>HR. al-Bukhārī no. 6069:</b> seluruh umat dimaafkan kecuali yang terang-terangan memamerkan dosa. Membungkus pelanggaran dengan estetika adalah bentuk memamerkannya.",
+ E:"<b>QS al-Aʿrāf: 80:</b> Al-Qur’an menyebut perbuatan kaum Nabi Luth dengan nama moralnya, <i>fāḥisyah</i>. Mengganti nama tidak mengubah hakikat.",
+ B:"<b>QS Ṣād: 26:</b> putuskanlah dengan kebenaran dan jangan mengikuti hawa nafsu. Empati itu mulia, tetapi emosi bukan dalil.",
+ A:"<b>QS al-Anʿām: 116:</b> jika kamu mengikuti kebanyakan orang di bumi, niscaya mereka menyesatkanmu. Jumlah bukan ukuran kebenaran.",
+ R:"<b>QS asy-Syuʿarā’: 168:</b> Nabi Luth berkata, “Aku sungguh membenci <i>perbuatanmu</i>.” Ada pilihan ketiga: menolak perbuatan sambil menjaga martabat manusianya.",
+ OK:"<b>QS al-Ḥujurāt: 6</b> memerintahkan meneliti, bukan mencurigai semua hal. Konten yang jujur dan bersumber jelas tidak perlu dicurigai."};
+const VAX=[
+ {k:"S",d:"Bungkus visual yang membuat hal salah terasa ringan dan biasa.",ex:"Contoh netral: maskot imut dan warna pastel untuk iklan rokok elektrik."},
+ {k:"E",d:"Istilah moral diganti istilah netral atau positif.",ex:"Contoh netral: “bukan judi, cuma investasi seru di slot”."},
+ {k:"B",d:"Kisah menyentuh dipakai untuk mematikan nalar.",ex:"Contoh netral: “dia menangis karena dilarang bolos, tega banget”."},
+ {k:"A",d:"Klaim “semua orang sudah begitu”, sering tanpa data.",ex:"Contoh netral: “satu kelas sudah pakai vape, tinggal kamu”."},
+ {k:"R",d:"Pilihan dipaksa jadi dua: ikut, atau kamu jahat.",ex:"Contoh netral: “nggak ikut bolos berarti nggak setia kawan”."}];
+const FEED=[
+ {u:"aesthetic.vibes",c:"#b45a8a",media:"Video 15 detik · lagu viral · filter pastel · bendera warna-warni berkibar di latar",txt:"just love, just vibes",likes:"48,2 rb",a:"S",why:"Tidak ada argumen sama sekali. Yang bekerja adalah bungkus visual dan musik yang membuat isu nilai terasa sekadar gaya hidup."},
+ {u:"ruangbebas",c:"#5a6fb4",txt:"Berhenti pakai kata “menyimpang”. Sebut saja “ekspresi diri”, biar kita semua lebih dewasa.",likes:"12,9 rb",a:"E",why:"Istilah yang memuat penilaian moral sengaja diganti istilah netral supaya perbuatannya kehilangan bobot penilaian."},
+ {u:"remajamasjid.id",c:"#1d7558",media:"Poster kajian · Sabtu 19.30 · terbuka untuk umum",txt:"Kajian remaja: fikih pergaulan dan adab bermedia sosial. Bawa teman, ada diskusi santai.",likes:"2,1 rb",a:"OK",why:"Tidak ada trik manipulasi. Isi jelas, penyelenggara jelas, ajakan terbuka. Tidak semua konten perlu dicurigai."},
+ {u:"genz.update",c:"#c2702a",txt:"Survei luar negeri: mayoritas Gen Z sudah menerima. Indonesia kapan sadar? Jangan jadi negara paling ketinggalan zaman.",likes:"31,4 rb",a:"A",why:"Klaim mayoritas dari tempat lain dipakai sebagai ukuran benar-salah, tanpa sumber yang bisa dicek."},
+ {u:"kisahharu",c:"#8a5ab4",txt:"Thread: dia menangis sendirian setelah keluarganya marah, padahal dia cuma ingin bahagia dengan pilihannya. Kalau kamu masih menolak, hatimu di mana?",likes:"67,8 rb",a:"B",why:"Kisah haru dipakai untuk membuat pertanyaan “apakah perbuatannya benar?” terasa kejam. Empati dan penilaian moral bisa berjalan bersamaan."},
+ {u:"suarakebebasan",c:"#2a8ab4",txt:"Cuma ada dua jenis orang di dunia: yang mendukung penuh, dan para pembenci. Kamu yang mana?",likes:"22,0 rb",a:"R",why:"Pilihan dipaksa menjadi dua kubu, seolah tidak ada sikap tegas yang tetap santun dan adil."},
+ {u:"seni.tanpa.batas",c:"#b4425a",media:"Galeri foto · konten berlabel “art”",txt:"Ini bukan konten dewasa, ini edukasi seni tubuh. Yang protes berarti belum terbuka pikirannya.",likes:"18,3 rb",a:"E",why:"Pornografi diberi label “seni” dan “edukasi”. Labelnya berubah, isinya tetap sama."},
+ {u:"grup.kelas.9b",c:"#5a8a3a",txt:"Video itu sudah ditonton satu sekolah. Cuma kamu yang belum. Cupu banget sih.",likes:"Grup WA · 41 anggota",a:"A",why:"Tekanan “semua sudah melakukannya” dipakai untuk menormalisasi konsumsi pornografi."},
+ {u:"info.resmi",c:"#3a5a8a",txt:"Komdigi: PP Tunas berlaku penuh sejak 28 Maret 2026. Platform wajib menunda akses media sosial berisiko tinggi bagi anak di bawah 16 tahun. Sumber: siaran pers resmi.",likes:"9,7 rb",a:"OK",why:"Sumber resmi, isi bisa dicek, tidak ada tekanan emosi. Kabar seperti ini justru baik dibagikan beserta sumbernya."},
+ {u:"brand.ceria",c:"#c29a2a",media:"Iklan minuman · maskot imut warna-warni · jingle ceria",txt:"Edisi spesial bulan ini: cinta tanpa batas! Dapatkan kemasan warna-warninya sekarang.",likes:"Iklan bersponsor",a:"S",why:"Kampanye nilai diselipkan lewat kemasan, warna, dan maskot. Diulang terus-menerus sampai terasa biasa."},
+ {u:"patroli.moral",c:"#6a4a3a",txt:"Kalau kamu tidak ikut menyebar foto dan alamat mereka, berarti kamu pendukung penyimpangan!",likes:"Diteruskan berkali-kali",a:"R",why:"Trik ini juga dipakai oleh pihak yang mengaku membela agama. Memaksa memilih antara “menyebar data pribadi” atau “mendukung” adalah rangkap palsu, dan menyebar data pribadi adalah kezaliman (QS al-Ḥujurāt: 12)."}];
+
+const CASES=[
+ {from:"Pesan diteruskan berkali-kali",msg:"INFO PENTING!! Ada geng penyimpangan di sekolah sebelah, ini foto tiga anaknya. Sebarkan biar viral dan mereka kapok!",
+  q:[{ask:"Sumber: siapa pengirim pertamanya?",o:["Jelas, ada nama dan lembaga yang bertanggung jawab","Tidak jelas, hanya pesan terusan"],a:1},
+     {ask:"Bukti: apa buktinya?",o:["Hanya foto tanpa konteks dan tuduhan","Dokumen resmi yang bisa dicek"],a:0},
+     {ask:"Dampak: apa akibatnya kalau kamu ikut menyebar?",o:["Mereka jadi sadar","Fitnah, perundungan, dan aib orang terbuka, padahal belum tentu benar"],a:1}],
+  act:{o:["Sebarkan ke semua grup","Jangan sebarkan. Jika ada kekhawatiran nyata, sampaikan ke guru atau pihak sekolah","Kirim ke akun gosip"],a:1},
+  dalil:"<b>QS al-Ḥujurāt: 6:</b> jika datang kabar dari orang yang tidak jelas, telitilah dahulu agar kamu tidak mencelakakan suatu kaum tanpa mengetahui keadaannya."},
+ {from:"Dua video viral · Women’s March, Monas, 7 November 2026",msg:"Versi A: seorang pengemudi ojol menurunkan bendera pelangi. Versi B, menurut panitia: tiga orang tak dikenal merampas bendera secara paksa dan ada peserta terluka.",
+  q:[{ask:"Sumber: apakah kedua versi berasal dari pihak netral?",o:["Ya, keduanya pasti netral","Belum tentu, masing-masing pihak punya kepentingan"],a:1},
+     {ask:"Bukti: sudah ada kesimpulan resmi?",o:["Kronologinya masih simpang siur","Sudah pasti versi yang paling sering dibagikan"],a:0},
+     {ask:"Dampak: apa risikonya kalau kamu menyebar satu versi sambil memaki pihak lain?",o:["Tidak ada, cuma unggahan","Memperkeruh suasana dan bisa memicu kekerasan"],a:1}],
+  act:{o:["Sebarkan versi yang sesuai pendapatku","Tahan, tunggu keterangan resmi dan media kredibel, jangan ikut memprovokasi","Serukan aksi balasan"],a:1},
+  dalil:"<b>QS al-Isrā’: 36:</b> jangan mengikuti sesuatu yang tidak kamu ketahui ilmunya. Dalam kasus ini MUI menolak LGBT sekaligus mengimbau umat menahan diri dan tidak terprovokasi."},
+ {from:"Akun meme @faktaviral",msg:"SURVEI: 90% remaja Indonesia sudah menganggap penyimpangan seksual itu normal! (tanpa tautan sumber)",
+  q:[{ask:"Sumber: siapa yang melakukan survei?",o:["Tidak disebutkan sama sekali","Lembaga survei resmi dengan metode jelas"],a:0},
+     {ask:"Bukti: trik SEBAR apa yang dipakai?",o:["Eufemisme","Arus mayoritas: angka besar tanpa data"],a:1},
+     {ask:"Dampak: kalau klaim ini dipercaya?",o:["Orang merasa “semua sudah biasa” lalu ikut menganggapnya wajar","Tidak berpengaruh apa-apa"],a:0}],
+  act:{o:["Bagikan, angkanya mengejutkan","Minta sumbernya, jangan sebarkan klaim tanpa data","Bikin tandingan dengan angka karangan sendiri"],a:1},
+  dalil:"<b>HR. Muslim (Muqaddimah):</b> cukuplah seseorang dianggap berdusta bila ia menceritakan semua yang ia dengar. Membalas dengan angka karangan sendiri sama salahnya."}];
+
+const BOSS=[
+ {where:"Kolom komentar · grup kelas",sit:"Teman sekelas membagikan video estetik berlatar pelangi dengan caption: “Cinta itu tidak pernah salah, siapa pun orangnya.” Komentar mulai ramai.",
+  o:[{t:"Membalas dengan hujatan dan menyebar foto pribadinya",good:false,why:"Kebenaran tidak dibela dengan cara zalim. Islam melarang mengolok-olok dan memata-matai (QS al-Ḥujurāt: 11–12)."},
+     {t:"Diam lalu ikut memberi like supaya tidak dibilang tidak toleran",good:false,why:"Ini jebakan rangkap palsu: seolah pilihannya hanya mendukung atau membenci."},
+     {t:"Mengajaknya bicara secara pribadi, menunjukkan trik narasi di video itu, dan menyampaikan sikap Islam dengan santun",good:true,why:"Tegas pada nilai, santun pada orang. Inilah dakwah dengan hikmah (QS an-Naḥl: 125)."}]},
+ {where:"Pesan pribadi",sit:"Sahabatmu curhat diam-diam bahwa ia sedang bergulat dengan perasaannya sendiri dan merasa takut.",
+  o:[{t:"Menceritakannya ke teman lain supaya ia “diawasi”",good:false,why:"Itu membuka aib orang yang sedang mencari pertolongan, dan bisa membuatnya makin menjauh."},
+     {t:"Langsung menjauhinya",good:false,why:"Menjauh membuatnya sendirian di saat paling rentan."},
+     {t:"Menjaga rahasianya, mendengarkan, menguatkan imannya, dan mendorongnya bicara dengan guru BK atau ustaz yang ia percaya",good:true,why:"Menutup aib saudara adalah akhlak mulia, dan pendampingan orang dewasa tepercaya lebih menolong daripada penghakiman."}]},
+ {where:"Grup WhatsApp kampung",sit:"Ada ajakan “sweeping” ke sebuah kos yang dicurigai, hanya berdasarkan kabar burung.",
+  o:[{t:"Ikut berangkat biar ramai",good:false,why:"Main hakim sendiri adalah kezaliman dan pelanggaran hukum, apalagi berdasar kabar yang belum diteliti."},
+     {t:"Membagikan lokasi kos itu ke grup lain",good:false,why:"Menyebar kabar yang belum jelas bisa memicu kekerasan terhadap orang yang belum tentu bersalah."},
+     {t:"Menolak ikut, mengingatkan bahwa penegakan hukum adalah wewenang aparat, dan menyarankan melapor jika ada pelanggaran nyata",good:true,why:"Tabayun dulu (QS al-Ḥujurāt: 6). Mengubah kemungkaran “dengan tangan” adalah ranah pemilik wewenang (HR. Muslim no. 49)."}]}];
+
+const TIME=20;
+let S, tick=null;
+function fresh(){return {screen:"home",shield:100,score:0,combo:0,best:0,fi:0,fpick:null,stats:{},ci:0,cAns:[],bi:0,bpick:null,fx:""};}
+function start(d){S=(d&&d.screen)?d:fresh();render();}
+window.claude?.hot?.snapshot?.(()=>S);
+function set(p){Object.assign(S,p);render();window.scrollTo({top:0,behavior:"smooth"});}
+const $=h=>{document.getElementById("app").innerHTML=h;};
+function stopT(){if(tick){clearInterval(tick);tick=null;}}
+function hurt(n){S.shield=Math.max(0,S.shield-n);S.combo=0;S.fx="shake";}
+function hud(label){
+ return `<div class="hud"><div><div class="lbl"><span>Perisai iman</span><span>${S.shield}%</span></div><div class="bar ${S.shield<35?"low":""}"><i style="width:${S.shield}%"></i></div></div>
+ <div class="score">${S.score}<div class="small muted" style="font:500 11px var(--body)">poin</div></div>
+ <div class="combo">${S.combo>=2?"Kombo x"+S.combo:""}${label?`<span class="muted" style="float:right;font-weight:500">${label}</span>`:""}</div></div>`;}
+function render(){stopT();({home,vax,feed,tabayun,boss,over,result})[S.screen]();S.fx="";}
+
+function home(){
+ $(`<section class="stack rise" style="padding-top:16px">
+  <div class="row" style="justify-content:space-between"><span class="wordmark">WIQĀYAH</span><span class="arab" lang="ar">وِقَايَة</span></div>
+  <h1>Patroli Linimasa</h1>
+  <p class="muted">Kamu adalah Penjaga Linimasa. Di media sosial, normalisasi penyimpangan seksual jarang datang lewat argumen. Ia datang lewat trik. Kenali triknya, teliti kabarnya, dan jaga perisai imanmu tetap utuh.</p>
+ </section>
+ <div class="stack" style="margin-top:14px">
+  <div class="card stack">
+   <h3>Tiga babak · ± 12 menit</h3>
+   <div class="stack small">
+    <div class="row"><span class="tag gold">Vaksin</span><span>Kenali 5 trik SEBAR lewat contoh netral</span></div>
+    <div class="row"><span class="tag">Babak 1 · Patroli</span><span>11 unggahan, 20 detik per unggahan</span></div>
+    <div class="row"><span class="tag">Babak 2 · Tabayun</span><span>Teliti 3 kabar viral sebelum bersikap</span></div>
+    <div class="row"><span class="tag red">Babak 3 · Kolom komentar</span><span>Tegas pada nilai, santun pada orang</span></div>
+   </div>
+  </div>
+  <div class="card small stack"><b>Aturan</b><span>Jawaban tepat menambah poin dan kombo. Tertipu trik atau kehabisan waktu akan mengurangi perisai imanmu. Kalau perisai habis, permainan berakhir.</span></div>
+  <button class="btn" onclick="set({screen:'vax'})">Ambil vaksin dulu</button>
+  <p class="footer">Prototipe esai WIQĀYAH, AWF 2026. Dirancang berdasarkan teori inokulasi (McGuire, 1961; Roozenbeek &amp; van der Linden, 2019), perintah tabayun (QS al-Ḥujurāt: 6), dan sikap Nabi Luth (QS asy-Syuʿarā’: 168). Semua akun dan unggahan dalam permainan ini fiktif, kecuali kabar yang disebut bersumber resmi.</p>
+ </div>`);
+}
+function vax(){
+ $(`<div class="stack rise" style="padding-top:12px">
+  <span class="tag gold">Vaksin · dosis lemah</span>
+  <h2>Lima trik SEBAR</h2>
+  <p class="small muted">Seperti vaksin, kamu dikenalkan dulu pada versi lemah triknya lewat contoh yang tidak sensitif. Setelah itu, kamu akan menghadapinya di linimasa sungguhan.</p>
+  <div class="card">${VAX.map(v=>`<div class="vax"><b class="l">${v.k}</b><div><b>${TECH[v.k]}</b><div class="small">${v.d}</div><div class="small muted">${v.ex}</div></div></div>`).join("")}</div>
+  <button class="btn" onclick="set({screen:'feed',fi:0,fpick:null})">Mulai patroli</button>
+ </div>`);
+}
+function feed(){
+ const P=FEED[S.fi]; const pk=S.fpick;
+ const keys=["S","E","B","A","R","OK"];
+ const btns=keys.map(k=>{let cls="tk"+(k==="OK"?" safe":""); if(pk!==null){ if(k===P.a) cls+=" good"; else if(k===pk) cls+=" bad";}
+   return `<button class="${cls}" ${pk!==null?"disabled":""} onclick="pickFeed('${k}')"><b>${k==="OK"?"✓":k}</b><small>${TECH[k]}</small></button>`;}).join("");
+ let rv="";
+ if(pk!==null){const ok=pk===P.a;
+  rv=`<div class="reveal ${ok?"":"bad"} rise stack">
+   <div class="row"><span class="tag ${ok?"":"red"}">${pk==="timeout"?"Waktu habis":ok?"Tepat":"Tertipu"}</span><span class="tag gold">${TECH[P.a]}</span></div>
+   <p>${P.why}</p><div class="dalil">${DALIL[P.a]}</div>
+   <button class="btn" onclick="nextFeed()">${S.fi<FEED.length-1?"Unggahan berikutnya":"Lanjut ke Babak 2"}</button></div>`;}
+ $(`${hud("Patroli "+(S.fi+1)+"/"+FEED.length)}
+ <div class="stack ${S.fx}">
+  ${pk===null?`<div class="timer"><i id="tbar"></i></div>`:""}
+  <article class="post">
+   <div class="post-head"><div class="ava" style="background:${P.c}">${P.u.slice(0,2).toUpperCase()}</div><div><b>@${P.u}</b><div class="small muted">Disarankan untukmu</div></div></div>
+   ${P.media?`<div class="post-media" style="background:var(--accent-soft);color:var(--ink)">${P.media}</div>`:""}
+   <div class="post-body">${P.txt}</div>
+   <div class="post-meta"><span>${P.likes}</span><span>Bagikan</span><span>Komentar</span></div>
+  </article>
+  <p class="small"><b>Trik apa yang dipakai unggahan ini?</b> Pilih ✓ Aman jika tidak ada trik manipulasi.</p>
+  <div class="tks">${btns}</div>
+  ${rv}
+ </div>`);
+ if(pk===null){let left=TIME; const bar=document.getElementById("tbar");
+  tick=setInterval(()=>{left-=0.25; if(bar) bar.style.width=(left/TIME*100)+"%"; if(left<=0){stopT();pickFeed("timeout");}},250);}
+}
+function pickFeed(k){
+ const P=FEED[S.fi]; const ok=k===P.a; const st={...S.stats}; st[P.a]=st[P.a]||{n:0,ok:0}; st[P.a].n++; if(ok) st[P.a].ok++;
+ S.stats=st; S.fpick=k;
+ if(ok){S.combo++; S.best=Math.max(S.best,S.combo); S.score+=100+(S.combo-1)*20;} else hurt(12);
+ render();
+}
+function nextFeed(){ if(S.shield<=0) return set({screen:"over"}); if(S.fi<FEED.length-1) set({fi:S.fi+1,fpick:null}); else set({screen:"tabayun",ci:0,cAns:[]}); }
+
+function tabayun(){
+ const C=CASES[S.ci]; const done=S.cAns.length;
+ const qs=C.q.map((q,qi)=>{ if(qi>done) return ""; const ans=S.cAns[qi];
+  return `<div class="card stack"><b class="small">Langkah ${qi+1} · ${q.ask}</b>${q.o.map((o,oi)=>{let cls="opt"; if(ans!==undefined){ if(oi===q.a) cls+=" good"; else if(oi===ans) cls+=" bad";}
+   return `<button class="${cls}" ${ans!==undefined?"disabled":""} onclick="ansCase(${qi},${oi})">${o}</button>`;}).join("")}</div>`;}).join("");
+ let act="";
+ if(done>=3){const ans=S.cAns[3];
+  act=`<div class="card stack"><b class="small">Keputusan: apa yang kamu lakukan?</b>${C.act.o.map((o,oi)=>{let cls="opt"; if(ans!==undefined){ if(oi===C.act.a) cls+=" good"; else if(oi===ans) cls+=" bad";}
+   return `<button class="${cls}" ${ans!==undefined?"disabled":""} onclick="ansCase(3,${oi})">${o}</button>`;}).join("")}</div>`;
+  if(ans!==undefined) act+=`<div class="reveal ${ans===C.act.a?"":"bad"} rise stack"><div class="dalil" style="margin:0">${C.dalil}</div><button class="btn" onclick="nextCase()">${S.ci<CASES.length-1?"Kabar berikutnya":"Lanjut ke Babak 3"}</button></div>`;}
+ $(`${hud("Tabayun "+(S.ci+1)+"/"+CASES.length)}
+ <div class="stack ${S.fx}">
+  <h2>Teliti dulu, baru bersikap</h2>
+  <div class="bubble"><div class="from">${C.from}</div>${C.msg}</div>
+  ${qs}${act}
+ </div>`);
+}
+function ansCase(qi,oi){
+ const C=CASES[S.ci]; const ok=qi<3?C.q[qi].a===oi:C.act.a===oi;
+ const a=[...S.cAns]; a[qi]=oi; S.cAns=a;
+ if(ok){S.combo++; S.best=Math.max(S.best,S.combo); S.score+=qi<3?50:100;} else hurt(qi<3?6:12);
+ render();
+}
+function nextCase(){ if(S.shield<=0) return set({screen:"over"}); if(S.ci<CASES.length-1) set({ci:S.ci+1,cAns:[]}); else set({screen:"boss",bi:0,bpick:null}); }
+
+function boss(){
+ const X=BOSS[S.bi]; const p=S.bpick;
+ $(`${hud("Kolom komentar "+(S.bi+1)+"/"+BOSS.length)}
+ <div class="stack ${S.fx}">
+  <span class="tag red">${X.where}</span>
+  <div class="card"><p>${X.sit}</p></div>
+  <p class="small"><b>Balasan mana yang kamu kirim?</b></p>
+  <div class="stack">${X.o.map((o,i)=>{let cls="opt"; if(p!==null){ if(o.good) cls+=" good"; else if(i===p) cls+=" bad";}
+   return `<button class="${cls}" ${p!==null?"disabled":""} onclick="pickBoss(${i})">${o.t}</button>`;}).join("")}</div>
+  ${p!==null?`<div class="reveal ${X.o[p].good?"":"bad"} rise stack"><p>${X.o[p].why}</p>${X.o[p].good?"":`<p class="small muted">Sikap terbaik: ${X.o.find(o=>o.good).why}</p>`}
+   <button class="btn" onclick="nextBoss()">${S.bi<BOSS.length-1?"Situasi berikutnya":"Lihat hasil patroli"}</button></div>`:""}
+ </div>`);
+}
+function pickBoss(i){ const ok=BOSS[S.bi].o[i].good; S.bpick=i; if(ok){S.combo++;S.best=Math.max(S.best,S.combo);S.score+=150;} else hurt(15); render(); }
+function nextBoss(){ if(S.shield<=0) return set({screen:"over"}); if(S.bi<BOSS.length-1) set({bi:S.bi+1,bpick:null}); else set({screen:"result"}); }
+
+function over(){
+ $(`<div class="stack rise" style="padding-top:24px">
+  <span class="tag red">Perisai runtuh</span>
+  <h1>Kamu terseret arus</h1>
+  <p class="muted">Tidak apa-apa. Justru begitulah cara vaksin bekerja: kamu baru saja merasakan sendiri betapa halusnya trik-trik ini. Coba lagi, dan kali ini perhatikan polanya.</p>
+  <div class="card"><small class="muted">Poin terakhir</small><div class="big">${S.score}</div></div>
+  <button class="btn" onclick="set(fresh())">Coba lagi</button>
+ </div>`);
+}
+function result(){
+ const total=Object.values(S.stats).reduce((a,b)=>a+b.n,0), right=Object.values(S.stats).reduce((a,b)=>a+b.ok,0);
+ const rank=S.score>=2600?"Murabbi Linimasa":S.score>=1800?"Penjaga Tangguh":"Penjaga Pemula";
+ let weak=null,wr=2; for(const k of ["S","E","B","A","R"]){const s=S.stats[k]; if(s&&s.n){const r=s.ok/s.n; if(r<wr){wr=r;weak=k;}}}
+ const rows=["S","E","B","A","R","OK"].map(k=>{const s=S.stats[k]||{n:0,ok:0}; const pct=s.n?Math.round(s.ok/s.n*100):0;
+  return `<div><div class="lbl small" style="display:flex;justify-content:space-between"><span>${TECH[k]}</span><span>${s.ok}/${s.n}</span></div><div class="bar"><i style="width:${pct}%"></i></div></div>`;}).join("");
+ $(`<div class="stack rise" style="padding-top:16px">
+  <span class="tag gold">Hasil patroli</span>
+  <h1>${rank}</h1>
+  <div class="grid2">
+   <div class="card"><small class="muted">Total poin</small><div class="big">${S.score}</div></div>
+   <div class="card"><small class="muted">Perisai tersisa</small><div class="big">${S.shield}%</div></div>
+   <div class="card"><small class="muted">Unggahan tepat</small><div class="big" style="font-size:32px">${right}/${total}</div></div>
+   <div class="card"><small class="muted">Kombo terbaik</small><div class="big" style="font-size:32px">x${S.best}</div></div>
+  </div>
+  <div class="card stack"><h3>Peta kekebalanmu</h3>${rows}
+   ${weak&&wr<1?`<p class="small"><b>Titik rawanmu: ${TECH[weak]}.</b> ${DALIL[weak]}</p>`:`<p class="small"><b>Kebal terhadap semua trik.</b> Pertahankan dengan dosis penguat secara berkala.</p>`}</div>
+  <div class="card stack small"><h3>Bekal yang kamu bawa pulang</h3>
+   <span><b>Kenali trik:</b> Simbol, Eufemisme, Baper, Arus mayoritas, Rangkap palsu.</span>
+   <span><b>Tabayun 3 langkah:</b> siapa sumbernya, apa buktinya, apa dampaknya jika disebar.</span>
+   <span><b>Pegangan sikap:</b> “Aku membenci perbuatanmu” (QS asy-Syuʿarā’: 168). Tolak perbuatannya, jaga martabat manusianya.</span></div>
+  <button class="btn" onclick="set(fresh())">Main lagi</button>
+  <p class="footer">Efek inokulasi bisa memudar seiring waktu. Ulangi permainan ini secara berkala sebagai dosis penguat.</p>
+ </div>`);
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+</body>
+</html>
